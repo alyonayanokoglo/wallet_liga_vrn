@@ -171,11 +171,18 @@ def quiz_feedback_with_answer_html(header: str, explain_plain: str) -> str:
 def quiz_answer_keyboard(q_index: int) -> InlineKeyboardMarkup:
     q = QUIZ_QUESTIONS[q_index]
     opts = cast(list[str], q["opts"])
+    indexed_opts = list(enumerate(opts))
+    random.shuffle(indexed_opts)
     buttons: list[list[InlineKeyboardButton]] = []
-    for i, label in enumerate(opts):
+    for original_idx, label in indexed_opts:
         short = label[:60] + ("…" if len(label) > 60 else "")
         buttons.append(
-            [InlineKeyboardButton(text=short, callback_data=f"quiz:{q_index}:{i}")]
+            [
+                InlineKeyboardButton(
+                    text=short,
+                    callback_data=f"quiz:{q_index}:{original_idx}",
+                )
+            ]
         )
     buttons.append(
         [InlineKeyboardButton(text="Сделать паузу", callback_data="quiz:exit")]

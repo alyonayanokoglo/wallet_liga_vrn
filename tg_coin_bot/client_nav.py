@@ -12,6 +12,7 @@ CLIENT_NAV_BALANCE = "Мой баланс"
 CLIENT_NAV_SPEND = "Списать карму"
 CLIENT_NAV_DEMO_PROGRAM = "Программа демо-дня"
 CLIENT_NAV_OPEN_MIC = "Задать вопрос на открытый микрофон"
+CLIENT_NAV_SNACK = "Где сегодня перекусить?"
 
 CLIENT_NAV_TEXTS: frozenset[str] = frozenset(
     {
@@ -21,6 +22,7 @@ CLIENT_NAV_TEXTS: frozenset[str] = frozenset(
         CLIENT_NAV_SPEND,
         CLIENT_NAV_DEMO_PROGRAM,
         CLIENT_NAV_OPEN_MIC,
+        CLIENT_NAV_SNACK,
     }
 )
 
@@ -44,6 +46,9 @@ def client_main_nav_reply_keyboard() -> ReplyKeyboardMarkup:
             [
                 KeyboardButton(text=CLIENT_NAV_DEMO_PROGRAM),
                 KeyboardButton(text=CLIENT_NAV_OPEN_MIC),
+            ],
+            [
+                KeyboardButton(text=CLIENT_NAV_SNACK),
             ],
         ],
         resize_keyboard=True,

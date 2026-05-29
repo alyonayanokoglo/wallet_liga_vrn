@@ -26,6 +26,7 @@ from client_nav import (
     CLIENT_NAV_BALANCE,
     CLIENT_NAV_DEMO_PROGRAM,
     CLIENT_NAV_OFFICE_MAP,
+    CLIENT_NAV_SNACK,
     CLIENT_NAV_SPEND,
     client_main_nav_reply_keyboard,
 )
@@ -51,7 +52,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_PATH = os.getenv("DB_PATH", "bot.db")
 CAREER_DEMO_PHOTO_PATH = BASE_DIR / "img" / "1920х1080 (1) (1).png"
 BALANCE_PHOTO_PATH = BASE_DIR / "img" / "1200Х600 (1) (1).png"
-OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "locat.png"
+OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "localoca.png"
 
 # Кастомный 🎁 в подсказке про обмен кармы на мерч в магазине.
 MERCH_SHOP_GIFT_CUSTOM_EMOJI_ID = "5411490391587324162"
@@ -289,13 +290,12 @@ def demo_day_program_html() -> str:
         "чтобы примерить профессии Совкомбанка на себе\n\n"
         "<b>Лекторий</b>\n"
         "🔹 17:00–17:30 — Ознакомительная встреча\n"
-        "🔹 17:30–18:00 — Красивый, плохой, злой. Как завоевать авторитет коллег и друзей\n"
-        "Марина Грицака\n"
-        "🔹 18:00–18:30 — Жизнь на автопилоте. Создай систему с ИИ вместо хаоса\n"
-        "Наталия Вяткина\n"
-        "🔹 18:30–19:00 — Трачу и плачу: ставим ударение правильно. Финансовая грамотность для тех, "
-        "у кого появились первые деньги\n"
-        "Ильяс Зульхарбиков\n"
+        "🔹 18:00–18:30 — Карьера – это переговоры: как превратить «я стараюсь» в «мне платят»\n"
+        "Нурболот Качкынбеков\n"
+        "🔹 18:30–19:00 — Время команд. 4 правила командной игры\n"
+        "Андрей Донцов\n"
+        "🔹 19:00–19:30 — Войти в ИТ: Дорога от учебных к реальным задачам\n"
+        "Марина Кутузова\n"
         "🔹 20:00–21:30 — Открытый микрофон с Максимом Лутчаком\n\n"
         "<b>Магазин мерча (товаров)</b>\n"
         "🔹 17:30–20:00"
@@ -1147,6 +1147,31 @@ async def nav_demo_program(message: Message, state: FSMContext) -> None:
     await message.answer(
         demo_day_program_html(),
         parse_mode="HTML",
+        reply_markup=main_reply_menu(),
+    )
+
+
+@dp.message(F.text == CLIENT_NAV_SNACK)
+async def nav_snack(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        return
+    await state.clear()
+    user = await get_user_by_telegram_id(message.from_user.id)
+    if not user:
+        await message.answer("Сначала нажми /start и зарегистрируйся.")
+        return
+    await message.answer(
+        "Билет не обэд\n\n"
+        "Запоминай, друллега:\n"
+        "— первое правило офиса. Кофе-брейк — обязательная часть рабочего процесса.\n"
+        "— второе правило офиса. Кофе должен быть вкусным.\n\n"
+        "Поэтому мы заколлабились с топовой кофейней Сибири — "
+        '<a href="https://akademiacoffee.com/">«Академией кофе»</a>. '
+        "Эта команда создает место встреч, общения и вдохновения, "
+        "а не просто варит бодрящие напитки.\n\n"
+        "Скорее в зону кофе-пойнта, чтобы обменять билет на что-то типа обэда!",
+        parse_mode="HTML",
+        disable_web_page_preview=True,
         reply_markup=main_reply_menu(),
     )
 

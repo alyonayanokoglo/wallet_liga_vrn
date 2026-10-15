@@ -52,7 +52,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_PATH = os.getenv("DB_PATH", "bot.db")
 CAREER_DEMO_PHOTO_PATH = BASE_DIR / "img" / "1920х1080 (1) (1).png"
 BALANCE_PHOTO_PATH = BASE_DIR / "img" / "1200Х600 (1) (1).png"
-OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "localoca.png"
+OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "office_map_voronezh.png"
+MERCH_SHOP_PHOTO_PATH = BASE_DIR / "img" / "merch_shop.jpeg"
 
 # Кастомный 🎁 в подсказке про обмен кармы на мерч в магазине.
 MERCH_SHOP_GIFT_CUSTOM_EMOJI_ID = "5411490391587324162"
@@ -289,14 +290,26 @@ def demo_day_program_html() -> str:
         "🔹 16:00–20:00 — Погружение в рабочие процессы. Участвуй в интерактивах, "
         "чтобы примерить профессии Совкомбанка на себе\n\n"
         "<b>Лекторий</b>\n"
-        "🔹 17:00–17:30 — Ознакомительная встреча\n"
-        "🔹 18:00–18:30 — Карьера – это переговоры: как превратить «я стараюсь» в «мне платят»\n"
-        "Нурболот Качкынбеков\n"
-        "🔹 18:30–19:00 — Время команд. 4 правила командной игры\n"
-        "Андрей Донцов\n"
-        "🔹 19:00–19:30 — Войти в ИТ: Дорога от учебных к реальным задачам\n"
-        "Марина Кутузова\n"
-        "🔹 20:00–21:30 — Открытый микрофон с Максимом Лутчаком\n\n"
+        '🔹 17:00–17:30 — Сбор команды\n'
+        'Зарядимся рабочим настроем на весь день\n'
+        '\n'
+        '🔹 17:30–18:00 — Лекция 1: Кадровый голод, трудоустройство не по специальности и прочие неприятности: что происходит с рынком найма, и что с этим делать\n'
+        'Валерия Козинец — Руководитель направления спецпроектов и организации мероприятий\n'
+        '\n'
+        '🔹 18:00–18:30 — Лекция 2: Какова роль специалиста в эпоху ИИ?\n'
+        'Сергей Климов — Разработчик\n'
+        '\n'
+        '🔹 18:30–19:00 — Лекция 3: Быстрее, выше, сильнее: как не перепутать токсичную продуктивность, социальное одобрение и настоящий успех\n'
+        'Дарья Кузнецова — Старший эксперт дистанционного обслуживания физических лиц\n'
+        '\n'
+        '🔹 20:00–21:30 — Стендап у кулера от Игнатия Винтурова\n'
+        'На открытом микрофоне разгоним самые животрепещущие карьерные темы\n'
+        '\n'
+        'Игнатий Винтуров — артист, блогер, музыкальный исполнитель\n'
+        'Валерия Козинец — руководитель направления спецпроектов и организации мероприятий Совкомбанка\n'
+        'Андрей Пыринов — концептолог и арт-директор Воронежа\n'
+        'Никита Татаринский — основатель сети «Культурно Коротко»\n'
+        '\n'
         "<b>Магазин мерча (товаров)</b>\n"
         "🔹 17:30–20:00"
     )
@@ -571,17 +584,30 @@ async def grant_activity_once(
     user_id: int,
     activity_title: str,
     admin_tg_id: Optional[int],
+    quiz_question_index: Optional[int] = None,
 ) -> tuple[bool, str, Optional[dict]]:
     """Начисление по названию активности; число записей ограничено limit_per_user в БД."""
     tc = _transactions_type_column()
     async with db_session() as db:
+        # Сериализуем награды участника до проверки лимита и повторного ответа.
+        if quiz_question_index is not None and not is_mysql():
+            await db.execute("BEGIN IMMEDIATE")
+        lock = " FOR UPDATE" if quiz_question_index is not None and is_mysql() else ""
         user_cursor = await db.execute(
-            "SELECT * FROM users WHERE id = ?",
+            "SELECT * FROM users WHERE id = ?" + lock,
             (user_id,),
         )
         user_row = await user_cursor.fetchone()
         if not user_row:
             return False, "Участник не найден.", None
+
+        if quiz_question_index is not None:
+            award_cursor = await db.execute(
+                "SELECT 1 FROM quiz_awards WHERE user_id = ? AND q_index = ?",
+                (user_id, quiz_question_index),
+            )
+            if await award_cursor.fetchone():
+                return False, "quiz_already_awarded", None
 
         activity_cursor = await db.execute(
             "SELECT * FROM activities WHERE title = ? AND is_active = 1",
@@ -616,6 +642,12 @@ async def grant_activity_once(
                 False,
                 f"Лимит начислений за «{activity['title']}» исчерпан ({cnt}/{lim}).",
                 None,
+            )
+
+        if quiz_question_index is not None:
+            await db.execute(
+                "INSERT INTO quiz_awards (user_id, q_index, awarded) VALUES (?, ?, 1)",
+                (user_id, quiz_question_index),
             )
 
         await db.execute(
@@ -1105,9 +1137,23 @@ async def balance_spend(message: Message, state: FSMContext) -> None:
     if not user:
         await message.answer("Сначала нажми /start и зарегистрируйся.")
         return
-    await message.answer(
-        f"{MERCH_SHOP_GIFT_HTML} Назови свой ID сотруднику в магазине — и обменяй карму на мерч\n\n"
-        f"Твой ID: {user['badge_id']}",
+    await message.answer_photo(
+        FSInputFile(str(MERCH_SHOP_PHOTO_PATH)),
+        caption=(
+            "Заработанную карму ты можешь потратить в магазине мерча, смотри расценки\n\n"
+            "<b>Картхолдер 1.300</b>\n"
+            "Стильный аксессуар в титановом корпусе для тех, кто двигается на бизике\n\n"
+            "<b>Носки 1.600</b>\n"
+            "Снаряжение, чтобы уверенно шагать по своей карьерной лестнице\n\n"
+            "<b>Докер 2.000</b>\n"
+            "Джинсовая кепка без козырька – дополнение для твоего смарт-кэжуал образа\n\n"
+            "<b>Обвес 2.400</b>\n"
+            "Мини-рюкзак для мелочи\n\n"
+            "<b>Шоппер и коврик для йоги 2.800</b>\n"
+            "Аксессуар для полного ворк-лайф-бэлэнса\n\n"
+            f"{MERCH_SHOP_GIFT_HTML} Назови свой ID сотруднику в магазине — и обменяй карму на мерч\n\n"
+            f"Твой ID: {html.escape(str(user['badge_id']))}"
+        ),
         parse_mode="HTML",
         reply_markup=main_reply_menu(),
     )

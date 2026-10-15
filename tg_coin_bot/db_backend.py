@@ -130,6 +130,8 @@ async def db_session() -> AsyncIterator[Any]:
             try:
                 yield db
             finally:
+                # Откатываем незавершённые записи и освобождаем блокировки при выходе.
+                await conn.rollback()
                 await db._close_cursor()
     else:
         async with aiosqlite.connect(_sqlite_path) as conn:

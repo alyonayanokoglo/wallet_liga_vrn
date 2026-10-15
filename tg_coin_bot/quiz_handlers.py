@@ -22,7 +22,7 @@ from activities_handlers import answer_karma_activities_screen
 
 GetUserByTelegramId = Callable[[int], Awaitable[Optional[dict]]]
 GrantActivityOnce = Callable[
-    [int, str, Optional[int]],
+    [int, str, Optional[int], int],
     Awaitable[tuple[bool, str, Optional[dict]]],
 ]
 MainNavMarkup = Callable[[], ReplyKeyboardMarkup]
@@ -373,25 +373,6 @@ async def _quiz_clear_progress(user_id: int) -> None:
         await db.commit()
 
 
-async def _quiz_mark_awarded_if_new(user_id: int, q_index: int) -> bool:
-    """
-    Возвращает True, если это первый раз (user_id, q_index) и мы пометили как награждённый.
-    False — если уже был (карму повторно не даём).
-    """
-    async with db_session() as db:
-        try:
-            await db.execute(
-                "INSERT INTO quiz_awards (user_id, q_index, awarded) VALUES (?, ?, 1)",
-                (user_id, int(q_index)),
-            )
-            await db.commit()
-            return True
-        except Exception:
-            # SQLite: sqlite3.IntegrityError; MySQL: IntegrityError.
-            # Награда уже выдавалась за этот вопрос.
-            return False
-
-
 async def _send_bank_quiz_intro_if_registered(
     target: Message,
     *,
@@ -641,26 +622,23 @@ def register_quiz_handlers(
             return
 
         if correct:
-            first_time_for_question = await _quiz_mark_awarded_if_new(user["id"], q_index_cb)
-            if first_time_for_question:
-                grant_ok, _gmsg, result = await grant_activity_once(
-                    user["id"],
-                    activity_quiz_reward,
-                    None,
+            grant_ok, grant_message, result = await grant_activity_once(
+                user["id"], activity_quiz_reward, None, q_index_cb
+            )
+            if grant_ok and result:
+                u = result["user"]
+                header = (
+                    f"{QUIZ_CORRECT_HTML} Верно! Начислено {result['points']} баллов кармы. "
+                    f"Баланс: {u['balance']}."
                 )
-                if grant_ok and result:
-                    u = result["user"]
-                    header = (
-                        f"{QUIZ_CORRECT_HTML} Верно! Начислено {result['points']} баллов кармы. "
-                        f"Баланс: {u['balance']}."
-                    )
-                else:
-                    header = (
-                        f"{QUIZ_CORRECT_HTML} Верно! Лимит наград за квиз уже исчерпан — "
-                        "новые баллы не начислялись."
-                    )
-            else:
+            elif grant_message == "quiz_already_awarded":
                 header = f"{QUIZ_CORRECT_HTML} Верно! За этот вопрос карма уже начислялась ранее."
+            else:
+                await callback.answer(
+                    "Не удалось начислить карму. Попробуй ответить ещё раз позже.",
+                    show_alert=True,
+                )
+                return
         else:
             header = f"{QUIZ_WRONG_HTML} Неверно"
 

@@ -1,9 +1,11 @@
 from collections.abc import Awaitable, Callable
 from typing import Optional
+from pathlib import Path
 
 from aiogram import Dispatcher, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
+    FSInputFile,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
@@ -18,9 +20,14 @@ MainNavMarkup = Callable[[], ReplyKeyboardMarkup]
 OPEN_MIC_FORM_BUTTON = "Задать вопрос"
 
 OPEN_MIC_PROMPT_HTML = (
-    f"<b>Стендап у кулера с Максимом Лутчаком</b> "
+    f"<b>Стендап у кулера от Игнатия Винтурова</b> "
     f'<tg-emoji emoji-id="{QUIZ_INTRO_MEGAPHONE_CUSTOM_EMOJI_ID}">📣</tg-emoji>\n\n'
-    "Открытый микрофон про карьеру, работу и всё, что обычно обсуждают у кулера.\n\n"
+    "<b>20:00–21:30</b>\n\n"
+    "На открытом микрофоне разгоним самые животрепещущие карьерные темы.\n\n"
+    "<b>Игнатий Винтуров</b> — артист, блогер, музыкальный исполнитель\n"
+    "<b>Валерия Козинец</b> — руководитель направления спецпроектов и организации мероприятий Совкомбанка\n"
+    "<b>Андрей Пыринов</b> — концептолог и арт-директор Воронежа\n"
+    "<b>Никита Татаринский</b> — основатель сети «Культурно Коротко»\n\n"
     "Хочешь задать вопрос? Отправь его через форму — так он точно дойдёт до модераторов."
 )
 
@@ -62,8 +69,9 @@ async def answer_open_mic_prompt(
         )
         return
 
-    await message.answer(
-        OPEN_MIC_PROMPT_HTML,
+    await message.answer_photo(
+        FSInputFile(str(Path(__file__).resolve().parent / "img" / "open_mic_schedule.png")),
+        caption=OPEN_MIC_PROMPT_HTML,
         parse_mode="HTML",
         reply_markup=_open_mic_form_inline_kb(open_mic_form_url),
     )

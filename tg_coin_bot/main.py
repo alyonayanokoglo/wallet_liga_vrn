@@ -28,6 +28,9 @@ from client_nav import (
     CLIENT_NAV_OFFICE_MAP,
     CLIENT_NAV_SNACK,
     CLIENT_NAV_SPEND,
+    CLIENT_NAV_MERCH,
+    CLIENT_NAV_QUIZ,
+    CLIENT_NAV_HH,
     client_main_nav_reply_keyboard,
 )
 from dotenv import load_dotenv
@@ -39,9 +42,13 @@ from db_backend import (
     row_to_dict,
 )
 from admin_handlers import register_admin_handlers
-from activities_handlers import register_activities_handlers
+from activities_handlers import (
+    register_activities_handlers,
+    answer_karma_activities_screen,
+    KARMA_POINTS_BADGE_HTML,
+)
 from questions_handlers import register_questions_handlers
-from quiz_handlers import register_quiz_handlers
+from quiz_handlers import register_quiz_handlers, answer_bank_quiz_intro_message
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -266,52 +273,43 @@ def is_admin(telegram_id: int) -> bool:
 
 
 def career_demo_intro_html(name: str) -> str:
-    """Короткое приветствие после регистрации (без расписания)."""
-    safe = html.escape(name)
+    """Персональное вступление к программе после регистрации."""
     return (
-        f"{safe}, сейчас начинётся демо-версия твоей карьеры в Совкомбанке!\n\n"
-        "Изучай локации, участвуй в активностях и зарабатывай карму, "
-        "которую можно обменять на мерч.\n\n"
-        "Хочешь получить карму прямо сейчас?"
+        f"{html.escape(name)}, сейчас начинается демо-версия твоей карьеры "
+        "в Совкомбанке. Сегодня тебя ждёт:\n\n"
     )
 
 
 def career_demo_text(name: str) -> str:
-    """Текст после регистрации — только вступление; расписание — по кнопке «Программа демо-дня»."""
-    return career_demo_intro_html(name)
+    """Полная программа после регистрации."""
+    return career_demo_intro_html(name) + demo_day_program_html()
 
 
 def demo_day_program_html() -> str:
-    """Расписание демо дня (только по кнопке «Программа демо-дня»)."""
+    """Общая программа для регистрации и кнопки главного меню."""
     return (
-        "<b>Переговорки</b>\n"
-        "🔹 16:00–20:00 — Карьерные консультации один на один с рекрутером\n\n"
-        "<b>Зона интерактивов и комната отдыха</b>\n"
-        "🔹 16:00–20:00 — Погружение в рабочие процессы. Участвуй в интерактивах, "
-        "чтобы примерить профессии Совкомбанка на себе\n\n"
-        "<b>Лекторий</b>\n"
-        '🔹 17:00–17:30 — Сбор команды\n'
-        'Зарядимся рабочим настроем на весь день\n'
+        '<b>📌Лекторий</b>\n'
+        '17:00-17:30 – Знакомство с командой Совкомбанка\n'
         '\n'
-        '🔹 17:30–18:00 — Лекция 1: Кадровый голод, трудоустройство не по специальности и прочие неприятности: что происходит с рынком найма, и что с этим делать\n'
-        'Валерия Козинец — Руководитель направления спецпроектов и организации мероприятий\n'
+        '17:30-18:00 – Лекция 1: Кадровый голод, трудоустройство не по специальности и прочие неприятности: что происходит с рынком наёма, и что с этим делать\n'
+        'Валерия Козинец, Руководитель направления спецпроектов и организации мероприятий\n'
         '\n'
-        '🔹 18:00–18:30 — Лекция 2: Какова роль специалиста в эпоху ИИ?\n'
-        'Сергей Климов — Разработчик\n'
+        '18:00-18:30 – Лекция 2: Какова роль специалиста в эпоху ИИ?\n'
+        'Сергей Климов, Разработчик\n'
         '\n'
-        '🔹 18:30–19:00 — Лекция 3: Быстрее, выше, сильнее: как не перепутать токсичную продуктивность, социальное одобрение и настоящий успех\n'
-        'Дарья Кузнецова — Старший эксперт дистанционного обслуживания физических лиц\n'
+        '18:30-19:00 – Лекция 3: Быстрее, выше, сильнее: как не перепутать токсичную продуктивность, социальное одобрение и настоящий успех\n'
+        'Дарья Кузнецова, Старший эксперт дистанционного обслуживания физических лиц\n'
         '\n'
-        '🔹 20:00–21:30 — Стендап у кулера от Игнатия Винтурова\n'
-        'На открытом микрофоне разгоним самые животрепещущие карьерные темы\n'
+        '20:00-21:30 – Открытый микрофон с Игнатием Винтуровым\n'
         '\n'
-        'Игнатий Винтуров — артист, блогер, музыкальный исполнитель\n'
-        'Валерия Козинец — руководитель направления спецпроектов и организации мероприятий Совкомбанка\n'
-        'Андрей Пыринов — концептолог и арт-директор Воронежа\n'
-        'Никита Татаринский — основатель сети «Культурно Коротко»\n'
+        '<b>📌Зона Интерактивов и комната отдыха</b>\n'
+        '16:00-20:00 – Погружение в рабочие процессы. Участвуй в интерактивах, чтобы примерить профессии Совкомбанка на себе и заработать карму\n'
         '\n'
-        "<b>Магазин мерча (товаров)</b>\n"
-        "🔹 17:30–20:00"
+        '<b>📌Переговорки</b>\n'
+        '16:00-20:00 – Карьерные консультации один на один с рекрутером\n'
+        '\n'
+        '<b>📌Магазин мерча (товаров)</b>\n'
+        '17:30-21:30 – Зарабатывай карму и успей урвать лимитированные офисные аксессуары'
     )
 
 
@@ -988,10 +986,10 @@ async def start(message: Message, state: FSMContext) -> None:
 
     await state.set_state(Registration.waiting_for_badge_id)
     await message.answer(
-        "Привет! Я Кошелёк кармы.\n\n"
-        "Карма — внутренняя валюта Совкомбанка и Лиги Приключений. "
-        "На неё ты сможешь купить классный мерч в магазине товаров.\n\n"
-        "Введи номер со своего браслета (4 цифры), чтобы продолжить."
+        "Привет! Я Кошелёк кармы.\n"
+        "Карма – внутренняя валюта Совкомбанка и Лиги приключений. "
+        "На нее ты сможешь купить классный мерч в магазине товаров.\n\n"
+        "Введи ID со своего браслета, чтобы продолжить."
     )
 
 
@@ -1048,62 +1046,105 @@ async def registration_name(message: Message, state: FSMContext) -> None:
 
     await state.clear()
 
-    await message.answer_photo(FSInputFile(str(CAREER_DEMO_PHOTO_PATH)))
+    # Полная программа превышает лимит подписи к фото (1024 символа).
+    await message.answer_photo(FSInputFile(str(OFFICE_MAP_PHOTO_PATH)))
     await message.answer(
         career_demo_text(user["name"]),
         parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="Да!", callback_data="onboard:karma_info")]
-            ]
-        ),
     )
+    await answer_welcome_karma(message, user)
+
+
+def onboarding_yes_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Да!", callback_data="onboard:earn")]
+    ])
+
+
+async def answer_welcome_karma(message: Message, user: dict) -> None:
+    ok, reason, result = await grant_activity_once(
+        user_id=user["id"], activity_title=ACTIVITY_WELCOME, admin_tg_id=None
+    )
+    if ok and result:
+        text = (
+            f"{user['name']}, лови первые {result['points']} баллов кармы! "
+            "Хочешь узнать, где и как заработать карму на покупку мерча?"
+        )
+    elif reason.startswith("Лимит начислений"):
+        text = (
+            f"{user['name']}, первые 100 баллов кармы уже начислены! "
+            "Хочешь узнать, где и как заработать карму на покупку мерча?"
+        )
+    else:
+        await message.answer(
+            "Не получилось начислить приветственную карму. Попробуй ещё раз.",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(text="Получить карму", callback_data="onboard:karma_info")
+            ]]),
+        )
+        return
+    await message.answer(text, reply_markup=onboarding_yes_keyboard())
 
 
 @dp.callback_query(F.data == "onboard:karma_info")
 async def onboarding_karma(callback: CallbackQuery) -> None:
-    if callback.from_user is None:
+    if callback.from_user is None or not isinstance(callback.message, Message):
         await callback.answer()
         return
-    cb_msg = callback.message
-    if not isinstance(cb_msg, Message):
-        await callback.answer()
-        return
-
     user = await get_user_by_telegram_id(callback.from_user.id)
     if not user:
         await callback.answer("Сначала пройди регистрацию.", show_alert=True)
         return
+    await answer_welcome_karma(callback.message, user)
+    await callback.answer()
 
-    ok, msg, result = await grant_activity_once(
-        user_id=user["id"],
-        activity_title=ACTIVITY_WELCOME,
-        admin_tg_id=None,
-    )
 
-    if not ok:
-        balance_line = (
-            f"На твоём балансе уже есть карма: {user['balance']} баллов.\n\n"
-            if "уже было" in msg
-            else ""
-        )
-        await cb_msg.answer(
-            f"{user['name']}, приветственные баллы уже начислялись.\n\n"
-            f"{balance_line}"
-            "Открывай главное меню кнопками внизу чата.",
-            reply_markup=main_reply_menu(),
-        )
+@dp.callback_query(F.data == "onboard:earn")
+async def onboarding_earn(callback: CallbackQuery, state: FSMContext) -> None:
+    if callback.from_user is None or not isinstance(callback.message, Message):
         await callback.answer()
         return
-
-    assert result is not None
-    u = result["user"]
-    await cb_msg.answer(
-        f"{u['name']}, лови первые {result['points']} баллов кармы! "
-        "Её дают за участие в интерактивных зонах. Ты готов? "
-        "Вперёд зарабатывать карму!",
-        reply_markup=main_reply_menu(),
+    if not await get_user_by_telegram_id(callback.from_user.id):
+        await callback.answer("Сначала пройди регистрацию.", show_alert=True)
+        return
+    await state.clear()
+    await callback.message.answer(
+        "Будь активным и пробуй себя в разных профессиях. "
+        "Не забывай говорить свой ID друллегам из Совкомбанка, "
+        "чтобы получить карму, а я всё посчитаю за тебя 😉",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Узнать о всех активностях", callback_data="onboard:activities")],
+            [InlineKeyboardButton(text="Пройти Квиз о банке", callback_data="quiz:open")],
+            [InlineKeyboardButton(text="Подписаться на ТГ — 100 баллов кармы", callback_data="act:tg_channel_future")],
+            [InlineKeyboardButton(text="Меню", callback_data="onboard:menu")],
+        ]),
     )
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "onboard:activities")
+async def onboarding_activities(callback: CallbackQuery, state: FSMContext) -> None:
+    if callback.from_user is None or not isinstance(callback.message, Message):
+        await callback.answer()
+        return
+    await answer_karma_activities_screen(
+        callback.message, state=state,
+        get_user_by_telegram_id=get_user_by_telegram_id,
+        from_user_id=callback.from_user.id,
+    )
+    await callback.answer()
+
+
+@dp.callback_query(F.data == "onboard:menu")
+async def onboarding_menu(callback: CallbackQuery, state: FSMContext) -> None:
+    if callback.from_user is None or not isinstance(callback.message, Message):
+        await callback.answer()
+        return
+    if not await get_user_by_telegram_id(callback.from_user.id):
+        await callback.answer("Сначала пройди регистрацию.", show_alert=True)
+        return
+    await state.clear()
+    await callback.message.answer("Выбери раздел меню:", reply_markup=main_reply_menu())
     await callback.answer()
 
 
@@ -1137,10 +1178,57 @@ async def balance_spend(message: Message, state: FSMContext) -> None:
     if not user:
         await message.answer("Сначала нажми /start и зарегистрируйся.")
         return
+    await message.answer(
+        "Назови свой ID сотруднику в магазине — и обменяй карму на мерч.\n\n"
+        f"Твой ID: {user['badge_id']}\n"
+        f"Баланс: {user['balance']} баллов кармы",
+        reply_markup=main_reply_menu(),
+    )
+
+
+@dp.message(F.text == CLIENT_NAV_QUIZ)
+async def nav_quiz(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        return
+    await state.clear()
+    await answer_bank_quiz_intro_message(
+        message, get_user_by_telegram_id=get_user_by_telegram_id,
+        main_nav_markup=main_reply_menu,
+    )
+
+
+@dp.message(F.text == CLIENT_NAV_HH)
+async def nav_hh_rating(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        return
+    await state.clear()
+    if not await get_user_by_telegram_id(message.from_user.id):
+        await message.answer("Сначала нажми /start и зарегистрируйся.")
+        return
+    await message.answer(
+        "Поддержи Совкомбанк в рейтинге работодателей hh.ru — переходи к голосованию!",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(
+                text="Поддержать Совкомбанк",
+                url="https://rating.hh.ru/poll/?utm_source=sovcombank_hh&utm_medium=referral&utm_campaign=special_project_rating_final",
+            )
+        ]]),
+    )
+
+
+@dp.message(F.text == CLIENT_NAV_MERCH)
+async def merch_shop(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        return
+    await state.clear()
+    user = await get_user_by_telegram_id(message.from_user.id)
+    if not user:
+        await message.answer("Сначала нажми /start и зарегистрируйся.")
+        return
     await message.answer_photo(
         FSInputFile(str(MERCH_SHOP_PHOTO_PATH)),
         caption=(
-            "Заработанную карму ты можешь потратить в магазине мерча, смотри расценки\n\n"
+            f"Заработанную карму ты можешь потратить в магазине мерча, смотри расценки {KARMA_POINTS_BADGE_HTML}\n\n"
             "<b>Картхолдер 1.300</b>\n"
             "Стильный аксессуар в титановом корпусе для тех, кто двигается на бизике\n\n"
             "<b>Носки 1.600</b>\n"

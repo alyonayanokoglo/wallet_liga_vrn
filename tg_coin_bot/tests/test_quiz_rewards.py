@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import AsyncMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.environ.update(BOT_TOKEN="123456:test", ADMIN_IDS="", MYSQL_URL="", DATABASE_URL="")
@@ -60,6 +61,35 @@ class QuizRewardTests(unittest.IsolatedAsyncioTestCase):
             await db.commit()
         self.assertTrue((await self.reward())[0])
         self.assertEqual(await self.counts(), [10, 1, 1])
+
+    async def test_welcome_reward_is_not_repeated(self):
+        message = AsyncMock()
+        await main.answer_welcome_karma(message, self.user)
+        self.assertIn("лови первые 100", message.answer.call_args.args[0])
+        keyboard = message.answer.call_args.kwargs["reply_markup"]
+        self.assertEqual(keyboard.inline_keyboard[0][0].callback_data, "onboard:earn")
+        await main.answer_welcome_karma(message, self.user)
+        self.assertIn("уже начислены", message.answer.call_args.args[0])
+        self.assertEqual(await self.counts(), [100, 0, 1])
+
+    async def test_registration_sends_map_program_and_welcome(self):
+        message = AsyncMock()
+        message.text = "Алена"
+        message.from_user.id = 456
+        message.from_user.username = None
+        state = AsyncMock()
+        state.get_data.return_value = {"badge_id": "9145"}
+        await main.registration_name(message, state)
+        self.assertEqual(message.answer_photo.call_count, 1)
+        self.assertEqual(message.answer_photo.call_args.args[0].path,
+                         str(main.OFFICE_MAP_PHOTO_PATH))
+        texts = [call.args[0] for call in message.answer.call_args_list]
+        self.assertEqual(len(texts), 2)
+        self.assertTrue(texts[0].startswith("Алена, сейчас начинается"))
+        self.assertIn(main.demo_day_program_html(), texts[0])
+        self.assertIn("Алена, лови первые 100 баллов кармы!", texts[1])
+        user = await main.get_user_by_telegram_id(456)
+        self.assertEqual(user["balance"], 100)
 
     async def test_limit_does_not_mark_question_awarded(self):
         async with db_backend.db_session() as db:

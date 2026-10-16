@@ -46,8 +46,9 @@ from activities_handlers import (
     register_activities_handlers,
     answer_karma_activities_screen,
     KARMA_POINTS_BADGE_HTML,
+    KARMA_CHAT_HINT_ARROW_HTML,
 )
-from questions_handlers import register_questions_handlers
+from questions_handlers import register_questions_handlers, SPEAKER_DOT_HTML
 from quiz_handlers import register_quiz_handlers, answer_bank_quiz_intro_message
 
 
@@ -61,6 +62,7 @@ CAREER_DEMO_PHOTO_PATH = BASE_DIR / "img" / "1920х1080 (1) (1).png"
 BALANCE_PHOTO_PATH = BASE_DIR / "img" / "1200Х600 (1) (1).png"
 OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "office_map_voronezh.png"
 MERCH_SHOP_PHOTO_PATH = BASE_DIR / "img" / "merch_shop.jpeg"
+HH_RATING_PHOTO_PATH = BASE_DIR / "img" / "hh_rating.png"
 
 # Кастомный 🎁 в подсказке про обмен кармы на мерч в магазине.
 MERCH_SHOP_GIFT_CUSTOM_EMOJI_ID = "5411490391587324162"
@@ -1215,8 +1217,9 @@ async def nav_hh_rating(message: Message, state: FSMContext) -> None:
     if not await get_user_by_telegram_id(message.from_user.id):
         await message.answer("Сначала нажми /start и зарегистрируйся.")
         return
-    await message.answer(
-        "Поддержи Совкомбанк в рейтинге работодателей hh.ru — переходи к голосованию!",
+    await message.answer_photo(
+        FSInputFile(str(HH_RATING_PHOTO_PATH)),
+        caption="Поддержи Совкомбанк в рейтинге работодателей hh.ru — переходи к голосованию!",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(
                 text="Поддержать Совкомбанк",
@@ -1238,16 +1241,16 @@ async def merch_shop(message: Message, state: FSMContext) -> None:
     await message.answer_photo(
         FSInputFile(str(MERCH_SHOP_PHOTO_PATH)),
         caption=(
-            f"Заработанную карму ты можешь потратить в магазине мерча, смотри расценки {KARMA_POINTS_BADGE_HTML}\n\n"
-            "<b>Картхолдер 1.300</b>\n"
+            f"Заработанную карму ты можешь потратить в магазине мерча, смотри расценки{KARMA_CHAT_HINT_ARROW_HTML}\n\n"
+            f"{SPEAKER_DOT_HTML} <b>Картхолдер — 1.300</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Стильный аксессуар в титановом корпусе для тех, кто двигается на бизике\n\n"
-            "<b>Носки 1.600</b>\n"
+            f"{SPEAKER_DOT_HTML} <b>Носки — 1.600</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Снаряжение, чтобы уверенно шагать по своей карьерной лестнице\n\n"
-            "<b>Докер 2.000</b>\n"
+            f"{SPEAKER_DOT_HTML} <b>Докер — 2.000</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Джинсовая кепка без козырька – дополнение для твоего смарт-кэжуал образа\n\n"
-            "<b>Обвес 2.400</b>\n"
+            f"{SPEAKER_DOT_HTML} <b>Обвес — 2.400</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Мини-рюкзак для мелочи\n\n"
-            "<b>Шоппер и коврик для йоги 2.800</b>\n"
+            f"{SPEAKER_DOT_HTML} <b>Шоппер и коврик для йоги — 2.800</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Аксессуар для полного ворк-лайф-бэлэнса\n\n"
             f"{MERCH_SHOP_GIFT_HTML} Назови свой ID сотруднику в магазине — и обменяй карму на мерч\n\n"
             f"Твой ID: {html.escape(str(user['badge_id']))}"

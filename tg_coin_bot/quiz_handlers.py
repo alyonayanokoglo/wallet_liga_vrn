@@ -124,8 +124,8 @@ QUIZ_QUESTIONS: list[dict[str, object]] = [
         "explain": "В Италии сыр пармезан может использоваться как ценный актив и залог.",
     },
     {
-        "q": "Современные банки выросли из торговых домов, менял и лавок, где хранили деньги и оформляли расчёты. Какой город часто называют родиной банковского дела?",
-        "opts": ["Венеция", "Греция", "Швеция"],
+        "q": "Современные банки выросли из торговых домов, менял и лавок, где хранили деньги и оформляли расчёты. Какую страну часто называют родиной банковского дела?",
+        "opts": ["Италия", "Греция", "Швеция"],
         "ok": 0,
         "explain": "Итальянские торговые города, включая Венецию, сыграли огромную роль в развитии банковского дела.",
     },
@@ -163,9 +163,9 @@ QUIZ_QUESTIONS: list[dict[str, object]] = [
 
 
 def quiz_feedback_with_answer_html(header: str, explain_plain: str) -> str:
-    """Вердикт + пояснение без blockquote (как в макете)."""
+    """Вердикт и правильный ответ с пояснением в блоке цитаты."""
     body = html.escape(explain_plain.strip("\n").strip())
-    return f"{header}\n\n<b>Правильный ответ:</b>\n{body}"
+    return f"{header}\n\n<blockquote><b>Правильный ответ:</b>\n{body}</blockquote>"
 
 
 def quiz_answer_keyboard(q_index: int) -> InlineKeyboardMarkup:
@@ -173,17 +173,16 @@ def quiz_answer_keyboard(q_index: int) -> InlineKeyboardMarkup:
     opts = cast(list[str], q["opts"])
     indexed_opts = list(enumerate(opts))
     random.shuffle(indexed_opts)
-    buttons: list[list[InlineKeyboardButton]] = []
+    answer_buttons: list[InlineKeyboardButton] = []
     for original_idx, label in indexed_opts:
         short = label[:60] + ("…" if len(label) > 60 else "")
-        buttons.append(
-            [
-                InlineKeyboardButton(
-                    text=short,
-                    callback_data=f"quiz:{q_index}:{original_idx}",
-                )
-            ]
+        answer_buttons.append(
+            InlineKeyboardButton(
+                text=short,
+                callback_data=f"quiz:{q_index}:{original_idx}",
+            )
         )
+    buttons = [answer_buttons[i:i + 2] for i in range(0, len(answer_buttons), 2)]
     buttons.append(
         [InlineKeyboardButton(text="Сделать паузу", callback_data="quiz:exit")]
     )
@@ -239,7 +238,7 @@ def quiz_completion_summary_html(*, correct_cnt: int, total: int) -> str:
         )
 
     return (
-        f"<b>Квиз завершён!</b> 🎉\n"
+        f"<b>Квиз завершён!</b> 🔥\n"
         f"Твой результат: {correct_cnt} из {total}.\n\n"
         f"<b>{html.escape(title)}</b>\n\n"
         f"{html.escape(body)}"
@@ -658,9 +657,7 @@ def register_quiz_handlers(
             await cb_msg.answer(feedback_html, parse_mode="HTML")
             await cb_msg.answer_photo(
                 FSInputFile(str(quiz_completion_photo_path(correct_cnt=correct_cnt))),
-            )
-            await cb_msg.answer(
-                quiz_completion_summary_html(correct_cnt=correct_cnt, total=total),
+                caption=quiz_completion_summary_html(correct_cnt=correct_cnt, total=total),
                 parse_mode="HTML",
                 reply_markup=main_nav_markup(),
             )

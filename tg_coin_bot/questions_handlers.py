@@ -19,15 +19,18 @@ MainNavMarkup = Callable[[], ReplyKeyboardMarkup]
 
 OPEN_MIC_FORM_BUTTON = "Задать вопрос"
 
+SPEAKER_DOT_CUSTOM_EMOJI_ID = "5413356537697563980"
+SPEAKER_DOT_HTML = f'<tg-emoji emoji-id="{SPEAKER_DOT_CUSTOM_EMOJI_ID}">🔵</tg-emoji>'
+
 OPEN_MIC_PROMPT_HTML = (
     f"<b>Стендап у кулера от Игнатия Винтурова</b> "
     f'<tg-emoji emoji-id="{QUIZ_INTRO_MEGAPHONE_CUSTOM_EMOJI_ID}">📣</tg-emoji>\n\n'
     "<b>20:00–21:30</b>\n\n"
     "На открытом микрофоне разгоним самые животрепещущие карьерные темы.\n\n"
-    "<b>Игнатий Винтуров</b> — артист, блогер, музыкальный исполнитель\n"
-    "<b>Валерия Козинец</b> — руководитель направления спецпроектов и организации мероприятий Совкомбанка\n"
-    "<b>Андрей Пыринов</b> — концептолог и арт-директор Воронежа\n"
-    "<b>Никита Татаринский</b> — основатель сети «Культурно Коротко»\n\n"
+    f"{SPEAKER_DOT_HTML} <b>Игнатий Винтуров</b> — артист, блогер, музыкальный исполнитель\n\n"
+    f"{SPEAKER_DOT_HTML} <b>Валерия Козинец</b> — руководитель направления спецпроектов и организации мероприятий Совкомбанка\n\n"
+    f"{SPEAKER_DOT_HTML} <b>Андрей Пыринов</b> — концептолог и арт-директор Воронежа\n\n"
+    f"{SPEAKER_DOT_HTML} <b>Никита Татаринский</b> — основатель сети «Культурно Коротко»\n\n"
     "Хочешь задать вопрос? Отправь его через форму — так он точно дойдёт до модераторов."
 )
 
@@ -70,7 +73,7 @@ async def answer_open_mic_prompt(
         return
 
     await message.answer_photo(
-        FSInputFile(str(Path(__file__).resolve().parent / "img" / "open_mic_schedule.png")),
+        FSInputFile(str(Path(__file__).resolve().parent / "img" / "public_talk.png")),
         caption=OPEN_MIC_PROMPT_HTML,
         parse_mode="HTML",
         reply_markup=_open_mic_form_inline_kb(open_mic_form_url),

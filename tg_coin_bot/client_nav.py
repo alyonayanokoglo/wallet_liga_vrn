@@ -18,16 +18,14 @@ CLIENT_NAV_MERCH = "Магазин мерча"
 CLIENT_NAV_QUIZ = "Квиз о банке"
 CLIENT_NAV_HH = "Поддержи Совкомбанк в рейтинге hh.ru"
 
-CLIENT_NAV_ITEMS = (
-    CLIENT_NAV_KARMA,
-    CLIENT_NAV_BALANCE,
-    CLIENT_NAV_MERCH,
-    CLIENT_NAV_QUIZ,
-    CLIENT_NAV_DEMO_PROGRAM,
-    CLIENT_NAV_OPEN_MIC,
-    CLIENT_NAV_OFFICE_MAP,
-    CLIENT_NAV_HH,
+CLIENT_NAV_ROWS = (
+    (CLIENT_NAV_KARMA, CLIENT_NAV_DEMO_PROGRAM),
+    (CLIENT_NAV_BALANCE, CLIENT_NAV_MERCH),
+    (CLIENT_NAV_QUIZ, CLIENT_NAV_OFFICE_MAP),
+    (CLIENT_NAV_OPEN_MIC,),
+    (CLIENT_NAV_HH,),
 )
+CLIENT_NAV_ITEMS = tuple(label for row in CLIENT_NAV_ROWS for label in row)
 CLIENT_NAV_TEXTS: frozenset[str] = frozenset(CLIENT_NAV_ITEMS)
 
 
@@ -38,7 +36,7 @@ def strip_reply_keyboard() -> ReplyKeyboardRemove:
 def client_main_nav_reply_keyboard() -> ReplyKeyboardMarkup:
     """Клавиатура постоянно видна внизу чата участника."""
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text=label)] for label in CLIENT_NAV_ITEMS],
+        keyboard=[[KeyboardButton(text=label) for label in row] for row in CLIENT_NAV_ROWS],
         resize_keyboard=True,
         is_persistent=True,
     )

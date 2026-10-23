@@ -59,7 +59,7 @@ load_dotenv(BASE_DIR / ".env")
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_PATH = os.getenv("DB_PATH", "bot.db")
-CAREER_DEMO_PHOTO_PATH = BASE_DIR / "img" / "1920х1080 (1) (1).png"
+CAREER_DEMO_PHOTO_PATH = BASE_DIR / "img" / "career_demo_welcome.jpg"
 BALANCE_PHOTO_PATH = BASE_DIR / "img" / "1200Х600 (1) (1).png"
 OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "office_map_kazan.jpg"
 MERCH_SHOP_PHOTO_PATH = BASE_DIR / "img" / "merch_shop.jpeg"
@@ -1064,7 +1064,7 @@ async def registration_name(message: Message, state: FSMContext) -> None:
     await state.clear()
 
     # Полная программа превышает лимит подписи к фото (1024 символа).
-    await message.answer_photo(FSInputFile(str(OFFICE_MAP_PHOTO_PATH)))
+    await message.answer_photo(FSInputFile(str(CAREER_DEMO_PHOTO_PATH)))
     await message.answer(
         career_demo_text(user["name"]),
         parse_mode="HTML",

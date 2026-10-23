@@ -72,7 +72,7 @@ class QuizRewardTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("уже начислены", message.answer.call_args.args[0])
         self.assertEqual(await self.counts(), [100, 0, 1])
 
-    async def test_registration_sends_map_program_and_welcome(self):
+    async def test_registration_sends_banner_program_and_welcome(self):
         message = AsyncMock()
         message.text = "Алена"
         message.from_user.id = 456
@@ -82,7 +82,7 @@ class QuizRewardTests(unittest.IsolatedAsyncioTestCase):
         await main.registration_name(message, state)
         self.assertEqual(message.answer_photo.call_count, 1)
         self.assertEqual(message.answer_photo.call_args.args[0].path,
-                         str(main.OFFICE_MAP_PHOTO_PATH))
+                         str(main.CAREER_DEMO_PHOTO_PATH))
         texts = [call.args[0] for call in message.answer.call_args_list]
         self.assertEqual(len(texts), 2)
         self.assertTrue(texts[0].startswith("Алена, сейчас начинается"))

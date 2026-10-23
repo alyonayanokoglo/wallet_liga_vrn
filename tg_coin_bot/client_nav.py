@@ -16,12 +16,14 @@ CLIENT_NAV_SNACK = "Где сегодня перекусить?"
 
 CLIENT_NAV_MERCH = "Магазин мерча"
 CLIENT_NAV_QUIZ = "Квиз о банке"
+CLIENT_NAV_ROCKET = "Молодёжная карта Рокета"
 CLIENT_NAV_HH = "Поддержи Совкомбанк в рейтинге hh.ru"
 
 CLIENT_NAV_ROWS = (
     (CLIENT_NAV_KARMA, CLIENT_NAV_DEMO_PROGRAM),
     (CLIENT_NAV_BALANCE, CLIENT_NAV_MERCH),
     (CLIENT_NAV_QUIZ, CLIENT_NAV_OFFICE_MAP),
+    (CLIENT_NAV_ROCKET,),
     (CLIENT_NAV_OPEN_MIC,),
     (CLIENT_NAV_HH,),
 )

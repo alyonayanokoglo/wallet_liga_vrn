@@ -31,6 +31,7 @@ from client_nav import (
     CLIENT_NAV_MERCH,
     CLIENT_NAV_QUIZ,
     CLIENT_NAV_HH,
+    CLIENT_NAV_ROCKET,
     client_main_nav_reply_keyboard,
 )
 from dotenv import load_dotenv
@@ -60,7 +61,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_PATH = os.getenv("DB_PATH", "bot.db")
 CAREER_DEMO_PHOTO_PATH = BASE_DIR / "img" / "1920х1080 (1) (1).png"
 BALANCE_PHOTO_PATH = BASE_DIR / "img" / "1200Х600 (1) (1).png"
-OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "office_map_voronezh.png"
+OFFICE_MAP_PHOTO_PATH = BASE_DIR / "img" / "office_map_kazan.jpg"
 MERCH_SHOP_PHOTO_PATH = BASE_DIR / "img" / "merch_shop.jpeg"
 HH_RATING_PHOTO_PATH = BASE_DIR / "img" / "hh_rating.png"
 
@@ -108,12 +109,14 @@ def _activities_seed_rows() -> list[tuple[str, int, int, int]]:
         ("Объяснительная", 200, 1, 0),
         ("Финансовые активы", 200, 1, 0),
         ("Финансы судьбы", 200, 1, 0),
+        ("Оформление карты Рокета", 400, 1, 0),
         ("Подписка на Telegram‑канал", 100, 1, 0),
         (ACTIVITY_VK_COMMUNITY, 100, 1, 0),
         (ACTIVITY_QUIZ_REWARD, 10, 20, 0),
         ("Лекция 1", 400, 1, 1),
         ("Лекция 2", 400, 1, 1),
         ("Лекция 3", 400, 1, 1),
+        ("Лекция 4", 400, 1, 1),
         (ACTIVITY_ADMIN_LECTURE_FALLBACK, 400, 4, 0),
         (ACTIVITY_ADMIN_MANUAL, 0, 999999, 0),
     ]
@@ -298,21 +301,23 @@ def demo_day_program_html() -> str:
         f"{PROGRAM_ARROW_HTML} <b>17:00–17:30</b>\n"
         "Знакомство с командой Совкомбанка\n\n"
         f"{PROGRAM_ARROW_HTML} <b>17:30–18:00 · Лекция 1</b>\n"
-        "Кадровый голод, трудоустройство не по специальности и прочие неприятности: "
-        "что происходит с рынком наёма, и что с этим делать\n"
+        "Совмещаем несовмещаемое: как стать разработчиком и не бросить универ\n"
+        "<b>Олег Визер</b>\n"
+        "<blockquote>Главный разработчик</blockquote>\n\n"
+        f"{PROGRAM_ARROW_HTML} <b>18:00–18:30 · Лекция 2</b>\n"
+        "Кадровый голод, трудоустройство не по специальности и прочие неприятности: что происходит с рынком найма, и что с этим делать\n"
         "<b>Валерия Козинец</b>\n"
         "<blockquote>Руководитель направления спецпроектов и организации мероприятий</blockquote>\n\n"
-        f"{PROGRAM_ARROW_HTML} <b>18:00–18:30 · Лекция 2</b>\n"
-        "Какова роль специалиста в эпоху ИИ?\n"
-        "<b>Сергей Климов</b>\n"
-        "<blockquote>Разработчик</blockquote>\n\n"
         f"{PROGRAM_ARROW_HTML} <b>18:30–19:00 · Лекция 3</b>\n"
-        "Быстрее, выше, сильнее: как не перепутать токсичную продуктивность, "
-        "социальное одобрение и настоящий успех\n"
-        "<b>Дарья Кузнецова</b>\n"
-        "<blockquote>Старший эксперт дистанционного обслуживания физических лиц</blockquote>\n\n"
+        "Отменяем восстание машин: что делать, чтобы искусственный интеллект нас не заменил\n"
+        "<b>Рафаэль Арзуханов</b>\n"
+        "<blockquote>Руководитель направления внедрения и поддержки специальных новых проектов</blockquote>\n\n"
+        f"{PROGRAM_ARROW_HTML} <b>19:00–19:30 · Лекция 4</b>\n"
+        "Тру-крайм по-банковски: почему умная молодёжь теряет деньги из-за мошенников\n"
+        "<b>Ольга Гаянова</b>\n"
+        "<blockquote>Супервайзер отдела внутреннего антифрода</blockquote>\n\n"
         f"{PROGRAM_ARROW_HTML} <b>20:00–21:30</b>\n"
-        "Открытый микрофон с Игнатием Винтуровым\n\n"
+        "Открытый микрофон с Максимом Лутчаком\n\n"
         "<b>Зона интерактивов и комната отдыха</b>\n\n"
         f"{PROGRAM_ARROW_HTML} <b>16:00–20:00</b>\n"
         "Погружение в рабочие процессы. Участвуй в интерактивах, "
@@ -1209,6 +1214,27 @@ async def nav_quiz(message: Message, state: FSMContext) -> None:
     )
 
 
+@dp.message(F.text == CLIENT_NAV_ROCKET)
+async def nav_rocket_card(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        return
+    await state.clear()
+    if not await get_user_by_telegram_id(message.from_user.id):
+        await message.answer("Сначала нажми /start и зарегистрируйся.")
+        return
+    await message.answer_photo(
+        FSInputFile(str(BASE_DIR / "img" / "rocket_card.jpg")),
+        caption=(
+            "<b>Оформи молодёжную карту Рокета и получи 400 баллов кармы</b>\n\n"
+            "• Карта, где кешбэк повышаешь ты — повышай кешбэк рублями до 7% "
+            "на покупки без категорий.\n\n"
+            "Ищи на площадке локацию карты и узнавай подробности."
+        ),
+        parse_mode="HTML",
+        reply_markup=main_reply_menu(),
+    )
+
+
 @dp.message(F.text == CLIENT_NAV_HH)
 async def nav_hh_rating(message: Message, state: FSMContext) -> None:
     if message.from_user is None:
@@ -1242,15 +1268,15 @@ async def merch_shop(message: Message, state: FSMContext) -> None:
         FSInputFile(str(MERCH_SHOP_PHOTO_PATH)),
         caption=(
             f"Заработанную карму ты можешь потратить в магазине мерча, смотри расценки{KARMA_CHAT_HINT_ARROW_HTML}\n\n"
-            f"{SPEAKER_DOT_HTML} <b>Картхолдер — 1.300</b>{KARMA_POINTS_BADGE_HTML}\n"
+            f"{SPEAKER_DOT_HTML} <b>Картхолдер — 1.400</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Стильный аксессуар в титановом корпусе для тех, кто двигается на бизике\n\n"
-            f"{SPEAKER_DOT_HTML} <b>Носки — 1.600</b>{KARMA_POINTS_BADGE_HTML}\n"
+            f"{SPEAKER_DOT_HTML} <b>Носки — 1.800</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Снаряжение, чтобы уверенно шагать по своей карьерной лестнице\n\n"
-            f"{SPEAKER_DOT_HTML} <b>Докер — 2.000</b>{KARMA_POINTS_BADGE_HTML}\n"
+            f"{SPEAKER_DOT_HTML} <b>Докер — 2.200</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Джинсовая кепка без козырька – дополнение для твоего смарт-кэжуал образа\n\n"
-            f"{SPEAKER_DOT_HTML} <b>Обвес — 2.400</b>{KARMA_POINTS_BADGE_HTML}\n"
+            f"{SPEAKER_DOT_HTML} <b>Мини-рюкзак — 2.700</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Мини-рюкзак для мелочи\n\n"
-            f"{SPEAKER_DOT_HTML} <b>Шоппер и коврик для йоги — 2.800</b>{KARMA_POINTS_BADGE_HTML}\n"
+            f"{SPEAKER_DOT_HTML} <b>Сумка для йоги — 3.200</b>{KARMA_POINTS_BADGE_HTML}\n"
             "Аксессуар для полного ворк-лайф-бэлэнса\n\n"
             f"{MERCH_SHOP_GIFT_HTML} Назови свой ID сотруднику в магазине — и обменяй карму на мерч\n\n"
             f"Твой ID: {html.escape(str(user['badge_id']))}"

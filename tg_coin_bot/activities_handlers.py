@@ -20,9 +20,10 @@ from client_nav import (
 
 _BASE_DIR = Path(__file__).resolve().parent
 LECTURE_PHOTOS: dict[str, Path] = {
-    "lecture_1": _BASE_DIR / "img" / "lecture_1_kozinec.jpg",
-    "lecture_2": _BASE_DIR / "img" / "lecture_2_klimov.jpg",
-    "lecture_3": _BASE_DIR / "img" / "lecture_3_kuznetsova.jpg",
+    "lecture_1": _BASE_DIR / "img" / "lecture_1_vizer.jpg",
+    "lecture_2": _BASE_DIR / "img" / "lecture_2_kozinec.jpg",
+    "lecture_3": _BASE_DIR / "img" / "lecture_3_arzukhanov.jpg",
+    "lecture_4": _BASE_DIR / "img" / "lecture_4_gayanova.jpg",
 }
 
 GetUserByTelegramId = Callable[[int], Awaitable[Optional[dict]]]
@@ -59,10 +60,13 @@ LECTURE_3_TITLE_HTML = (
     f'Лекция <tg-emoji emoji-id="{LECTURE_3_CUSTOM_EMOJI_ID}">3️⃣</tg-emoji>'
 )
 
+LECTURE_4_TITLE_HTML = "Лекция 4️⃣"
+
 LECTURE_TITLE_HTML_BY_SLUG: dict[str, str] = {
     "lecture_1": LECTURE_1_TITLE_HTML,
     "lecture_2": LECTURE_2_TITLE_HTML,
     "lecture_3": LECTURE_3_TITLE_HTML,
+    "lecture_4": LECTURE_4_TITLE_HTML,
 }
 
 # Маркер блока про баллы кармы (кастомный кружок; fallback — 🔵).
@@ -83,8 +87,9 @@ LOCATION_PIN_HTML = f'<tg-emoji emoji-id="{LOCATION_PIN_CUSTOM_EMOJI_ID}">📍</
 
 LECTURES: dict[str, tuple[str, str]] = {
     "lecture_1": ("Лекция 1", "оффер"),
-    "lecture_2": ("Лекция 2", "промпт"),
-    "lecture_3": ("Лекция 3", "чилл"),
+    "lecture_2": ("Лекция 2", "карьера"),
+    "lecture_3": ("Лекция 3", "промпт"),
+    "lecture_4": ("Лекция 4", "чилл"),
 }
 
 ACTIVITIES_TEXT: dict[str, tuple[str, str, str]] = {
@@ -166,21 +171,28 @@ ACTIVITIES_TEXT: dict[str, tuple[str, str, str]] = {
     "lecture_1": (
         "Лекция 1",
         LECTURE_1_TITLE_HTML,
-        '<b>Кадровый голод, трудоустройство не по специальности и прочие неприятности: что происходит с рынком найма, и что с этим делать</b>\n\n<b>17:30–18:00</b>\n\n<b>Валерия Козинец</b>\nРуководитель направления спецпроектов и организации мероприятий\n\n'
+        '<b>Совмещаем несовмещаемое: как стать разработчиком и не бросить универ</b>\n\n<b>17:30–18:00</b>\n\n<b>Олег Визер</b>\nГлавный разработчик\n\n'
         f"{KARMA_POINTS_BADGE_HTML} За кодовое слово после лекции — 400 баллов кармы.\n\n"
         "Получить карму за эту активность можно один раз.",
     ),
     "lecture_2": (
         "Лекция 2",
         LECTURE_2_TITLE_HTML,
-        '<b>Какова роль специалиста в эпоху ИИ?</b>\n\n<b>18:00–18:30</b>\n\n<b>Сергей Климов</b>\nРазработчик\n\n'
+        '<b>Кадровый голод, трудоустройство не по специальности и прочие неприятности: что происходит с рынком найма, и что с этим делать</b>\n\n<b>18:00–18:30</b>\n\n<b>Валерия Козинец</b>\nРуководитель направления спецпроектов и организации мероприятий\n\n'
         f"{KARMA_POINTS_BADGE_HTML} За кодовое слово после лекции — 400 баллов кармы.\n\n"
         "Получить карму за эту активность можно один раз.",
     ),
     "lecture_3": (
         "Лекция 3",
         LECTURE_3_TITLE_HTML,
-        '<b>Быстрее, выше, сильнее: как не перепутать токсичную продуктивность, социальное одобрение и настоящий успех</b>\n\n<b>18:30–19:00</b>\n\n<b>Дарья Кузнецова</b>\nСтарший эксперт дистанционного обслуживания физических лиц\n\n'
+        '<b>Отменяем восстание машин: что делать, чтобы искусственный интеллект нас не заменил</b>\n\n<b>18:30–19:00</b>\n\n<b>Рафаэль Арзуханов</b>\nРуководитель направления внедрения и поддержки специальных новых проектов\n\n'
+        f"{KARMA_POINTS_BADGE_HTML} За кодовое слово после лекции — 400 баллов кармы.\n\n"
+        "Получить карму за эту активность можно один раз.",
+    ),
+    "lecture_4": (
+        "Лекция 4",
+        LECTURE_4_TITLE_HTML,
+        '<b>Тру-крайм по-банковски: почему умная молодёжь теряет деньги из-за мошенников</b>\n\n<b>19:00–19:30</b>\n\n<b>Ольга Гаянова</b>\nСупервайзер отдела внутреннего антифрода\n\n'
         f"{KARMA_POINTS_BADGE_HTML} За кодовое слово после лекции — 400 баллов кармы.\n\n"
         "Получить карму за эту активность можно один раз.",
     ),
